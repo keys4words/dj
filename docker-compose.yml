@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+        db:
+                container_name: postgres
+                restart: always
+                env_file: env.vars
+                image: postgres
+                expose:
+                        - "5432"
+                volumes:
+                        db_data:/var/lib/mysql
+                networks:
+                        - proxy
+                ports:
+                        - 127.0.0.1:5432:5432
+
+
+        django:
+                container_name: app
+                restart: always
+                image: "registry.gitlab.com/keys4words/djgirls/noproject:latest"
+                build:
+                        context: .
+                        dockerfile: ./Dockerfile
+                env_file: env.vars
+                environment:
+                        VIRTUAL_HOST: app.localhost
+                        VIRTUAL_PORT: "8000"
+                command: python manage.py runserver 0.0.0.0:8000
+                #expose:
+                #        - "8000"
+                volumes:
+                        - .:/usr/src/app
+                networks:
+                        - proxy
+                depends_on:
+                        - db
+                ports:
+                        - 8000:8000
+networks:
+        proxy:
+                name: proxy
